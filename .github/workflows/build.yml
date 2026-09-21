@@ -1,0 +1,59 @@
+name: Build installers
+on:
+  push:
+    tags: ['v*']
+  workflow_dispatch:
+permissions:
+  contents: write
+jobs:
+  build:
+    strategy:
+      fail-fast: false
+      matrix:
+        include:
+          - os: ubuntu-22.04
+            target: linux
+          - os: macos-15
+            target: mac
+          - os: macos-15-intel
+            target: mac
+          - os: windows-2022
+            target: win
+    runs-on: ${{ matrix.os }}
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '22'
+          cache: npm
+      - uses: actions/setup-python@v5
+        with:
+          python-version: '3.11'
+      - run: npm ci
+      - run: node --test test/*.test.js
+      - run: python -m pip install -r requirements.txt
+      - run: python -m unittest discover -s test -p 'test_*.py'
+      - run: python -m PyInstaller --onefile --name indexer --distpath backend/dist backend/indexer.py
+      - run: npm run build -- --${{ matrix.target }}
+      - name: Upload tagged release assets
+        if: startsWith(github.ref, 'refs/tags/v')
+        env:
+          GH_TOKEN: ${{ github.token }}
+        shell: bash
+        run: |
+          files=()
+          for pattern in "*.AppImage" "*.deb" "*.dmg" "*.exe"; do
+            for file in dist/$pattern; do
+              if [[ -f "$file" ]]; then files+=("$file"); fi
+            done
+          done
+          gh release upload "$GITHUB_REF_NAME" "${files[@]}" --clobber
+      - uses: actions/upload-artifact@v4
+        with:
+          name: file-seek-${{ matrix.os }}
+          path: |
+            dist/*.AppImage
+            dist/*.deb
+            dist/*.dmg
+            dist/*.exe
+          if-no-files-found: error

@@ -1,0 +1,82 @@
+{
+  "name": "file-seek-desktop",
+  "productName": "File Seek",
+  "version": "0.1.0",
+  "description": "Fast local search across text, PDF and Word files with Laya or Jev reranking",
+  "main": "app/main.js",
+  "license": "MIT",
+  "author": {
+    "name": "Florian Standhartinger",
+    "email": "florian.standhartinger@gmail.com"
+  },
+  "repository": "https://github.com/fstandhartinger/file-seek-desktop",
+  "scripts": {
+    "start": "electron .",
+    "test": "node --test test/*.test.js && python3 -m unittest discover -s test -p 'test_*.py'",
+    "build": "electron-builder --publish never",
+    "build:linux": "electron-builder --linux AppImage deb --publish never"
+  },
+  "dependencies": {
+    "@receptron/laya": "^0.1.1"
+  },
+  "devDependencies": {
+    "electron": "^38.0.0",
+    "electron-builder": "^26.0.0"
+  },
+  "build": {
+    "appId": "com.fstandhartinger.fileseek",
+    "asar": true,
+    "asarUnpack": [
+      "node_modules/onnxruntime-node/**"
+    ],
+    "files": [
+      "app/**/*",
+      "package.json",
+      "node_modules/**/*",
+      "!node_modules/onnxruntime-node/bin/napi-v6/linux/x64/libonnxruntime_providers_cuda.so",
+      "!node_modules/onnxruntime-node/bin/napi-v6/linux/x64/libonnxruntime_providers_tensorrt.so"
+    ],
+    "extraResources": [
+      {
+        "from": "backend/dist",
+        "to": "backend",
+        "filter": [
+          "**/*"
+        ]
+      }
+    ],
+    "directories": {
+      "output": "dist"
+    },
+    "linux": {
+      "target": [
+        "AppImage",
+        "deb"
+      ],
+      "category": "Utility",
+      "icon": "media/icon.png",
+      "syncDesktopName": true
+    },
+    "mac": {
+      "target": [
+        "dmg"
+      ],
+      "icon": "media/icon.png"
+    },
+    "win": {
+      "target": [
+        "nsis"
+      ],
+      "icon": "media/icon.png"
+    },
+    "nsis": {
+      "createDesktopShortcut": true,
+      "shortcutName": "File Seek"
+    }
+  },
+  "allowScripts": {
+    "electron@38.8.6": true,
+    "onnxruntime-node@1.30.0": true
+  },
+  "desktopName": "file-seek.desktop"
+}
