@@ -149,6 +149,13 @@ class Index:
             total = self.db.execute('SELECT count(*) FROM files').fetchone()[0]
         self.emit({'event': 'complete', 'scanned': scanned, 'indexed': indexed, 'unchanged': unchanged, 'errors': errors, 'total': total, 'cancelled': self.cancel.is_set(), 'seconds': round(time.time() - started, 1)})
 
+    def close(self):
+        self.cancel.set()
+        if self.thread and self.thread.is_alive():
+            self.thread.join()
+        with self.lock:
+            self.db.close()
+
     def status(self):
         with self.lock:
             total = self.db.execute('SELECT count(*) FROM files').fetchone()[0]

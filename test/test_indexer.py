@@ -34,5 +34,6 @@ class IndexerTest(unittest.TestCase):
             index._scan([str(root)])
             self.assertEqual(index.status()['total'], 2)
             self.assertEqual(len(index.search('Cobalt')), 2)
+            index.close()
 
 if __name__ == '__main__': unittest.main()
