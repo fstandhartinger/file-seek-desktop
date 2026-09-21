@@ -8,6 +8,7 @@ import sqlite3
 import sys
 import threading
 import time
+import uuid
 from pathlib import Path
 
 TEXT_EXT = {'.txt', '.md', '.markdown', '.rst', '.log', '.csv', '.tsv', '.json', '.jsonl', '.xml', '.yaml', '.yml', '.toml', '.ini', '.cfg', '.conf', '.html', '.htm', '.css', '.js', '.jsx', '.ts', '.tsx', '.py', '.rb', '.go', '.rs', '.java', '.kt', '.swift', '.c', '.cc', '.cpp', '.h', '.hpp', '.sh', '.bash', '.zsh', '.sql', '.tex', '.org', '.ipynb'}
@@ -91,7 +92,7 @@ class Index:
     def _scan(self, roots):
         scanned = indexed = unchanged = errors = 0
         started = time.time()
-        token = str(time.time_ns())
+        token = uuid.uuid4().hex
         for root in roots:
             if self.cancel.is_set():
                 break
