@@ -1,7 +1,7 @@
 {
   "name": "file-seek-desktop",
   "productName": "File Seek",
-  "version": "0.1.1",
+  "version": "0.1.2",
   "description": "Fast local search across text, PDF and Word files with Laya or Jev reranking",
   "main": "app/main.js",
   "license": "MIT",
