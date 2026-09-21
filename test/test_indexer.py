@@ -1,3 +1,4 @@
+from contextlib import closing
 import tempfile
 import unittest
 from pathlib import Path
@@ -22,18 +23,17 @@ class IndexerTest(unittest.TestCase):
             with (root / 'forecast.pdf').open('wb') as out: writer.write(out)
             self.assertIn('Cobalt', extract(root / 'forecast.pdf'))
             events = []
-            index = Index(str(root / 'index.sqlite'), events.append)
-            index._scan([str(root)])
-            rows = index.search('Cobalt')
-            self.assertEqual({r['kind'] for r in rows}, {'TXT', 'DOCX', 'PDF'})
-            self.assertEqual(events[-1]['total'], 3)
-            index._scan([str(root)])
-            self.assertEqual(events[-1]['indexed'], 0)
-            self.assertEqual(events[-1]['unchanged'], 3)
-            (root / 'project.txt').unlink()
-            index._scan([str(root)])
-            self.assertEqual(index.status()['total'], 2)
-            self.assertEqual(len(index.search('Cobalt')), 2)
-            index.close()
+            with closing(Index(str(root / 'index.sqlite'), events.append)) as index:
+                index._scan([str(root)])
+                rows = index.search('Cobalt')
+                self.assertEqual({r['kind'] for r in rows}, {'TXT', 'DOCX', 'PDF'})
+                self.assertEqual(events[-1]['total'], 3)
+                index._scan([str(root)])
+                self.assertEqual(events[-1]['indexed'], 0)
+                self.assertEqual(events[-1]['unchanged'], 3)
+                (root / 'project.txt').unlink()
+                index._scan([str(root)])
+                self.assertEqual(index.status()['total'], 2)
+                self.assertEqual(len(index.search('Cobalt')), 2)
 
 if __name__ == '__main__': unittest.main()

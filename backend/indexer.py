@@ -137,12 +137,20 @@ class Index:
                             self.db.commit()
                         self.emit({'event': 'progress', 'scanned': scanned, 'indexed': indexed, 'unchanged': unchanged, 'errors': errors, 'root': root})
             if not self.cancel.is_set():
-                prefix = root.rstrip(os.sep) + os.sep
+                # SQLite compares paths case-sensitively; normalize with the host OS
+                # before pruning records from a drive or nested folder.
+                normalized_root = os.path.normcase(os.path.abspath(root))
                 with self.lock:
-                    stale = self.db.execute('SELECT id FROM files WHERE (path=? OR substr(path,1,?)=?) AND scan_id != ?', (root, len(prefix), prefix, token)).fetchall()
-                    for (file_id,) in stale:
-                        self.db.execute('DELETE FROM texts WHERE rowid=?', (file_id,))
-                        self.db.execute('DELETE FROM files WHERE id=?', (file_id,))
+                    stale = self.db.execute('SELECT id,path FROM files WHERE scan_id != ?', (token,)).fetchall()
+                    for file_id, stored_path in stale:
+                        normalized_path = os.path.normcase(os.path.abspath(stored_path))
+                        try:
+                            inside = os.path.commonpath((normalized_root, normalized_path)) == normalized_root
+                        except ValueError:
+                            inside = False
+                        if inside:
+                            self.db.execute('DELETE FROM texts WHERE rowid=?', (file_id,))
+                            self.db.execute('DELETE FROM files WHERE id=?', (file_id,))
                     self.db.commit()
         with self.lock:
             self.db.commit()
