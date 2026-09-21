@@ -33,6 +33,7 @@ class IndexerTest(unittest.TestCase):
                 self.assertEqual(events[-1]['unchanged'], 3)
                 (root / 'project.txt').unlink()
                 index._scan([str(root)])
+                    print('DELETE_DEBUG', 'root', str(root), 'events', events[-3:], 'rows', index.db.execute('SELECT path,scan_id FROM files').fetchall(), flush=True)
                 self.assertEqual(index.status()['total'], 2)
                 self.assertEqual(len(index.search('Cobalt')), 2)
 
